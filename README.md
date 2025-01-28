@@ -13,7 +13,7 @@
 stcli [command] [args]
 ```
 
-### brief explanation
+### structure 
 - each class represents a revision season.
 - classes contain several subjects, and subjects contain multiple topics.
 - paths use backslashes (`/`) to separate elements in the hierarchy.  
