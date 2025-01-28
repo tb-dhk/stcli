@@ -6,16 +6,6 @@
 
 ---
 
-## features
-
-- **class structure**: organize your revision into classes, subjects, and topics.
-- **path-based navigation**: use paths to represent hierarchy (e.g., `class/subject/topic`).
-- **flexible commands**: add, edit, log, and visualize progress through intuitive commands.
-- **visualization**: view progress as trees or graphs.
-- **customizable**: modify topic names and colors for better organization.
-
----
-
 ## usage
 
 ### general syntax
