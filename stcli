@@ -237,22 +237,33 @@ if len(sys.argv) == 1:
     print_help()
     exit()
 
-try:
-    sys.argv[2]
-except:
-    if sys.argv[1] != "tree":
-        print_help()
-        exit()
-    else:
-        path = "/"
-else:
-    path = sys.argv[2]
+# Initialize variables
+kwargs = {}
+path = "/"
 
+# Parse command-line arguments
+for arg in sys.argv[2:]:
+    if arg.startswith("--"):
+        # Parse key-value pairs (e.g., --key=value)
+        if "=" in arg:
+            key, value = arg[2:].split("=", 1)
+            kwargs[key] = value
+        else:
+            print(f"Invalid argument: {arg}")
+            print_help()
+            exit()
+    else:
+        # Treat non-keyword argument as the path
+        path = arg
+
+# Normalize the path and extract keys
 keys = [a for a in path.split("/") if a][:3]
 path = "/".join(keys)
+
+# Extract the name from the path
 try:
     name = keys[-1]
-except:
+except IndexError:
     name = ""
 
 if not verifypath(path):
@@ -278,9 +289,7 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
 
         case "edit":
             newpath = path
-            for i in sys.argv[3:]:
-                key = i.split("=")[0]
-                value = "=".join(i.split("=")[1:])
+            for key, value in kwargs:
                 if key == "name":
                     newpath = "/".join(path.split("/")[:-1]) + "/" + value
                     set_value_by_path(data, newpath, copy.deepcopy(get_value_by_path(data, path)[name]))
@@ -316,15 +325,10 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
             set_value_by_path(data, path + "/_values/" + vdate, value)
 
 elif sys.argv[1] == "tree":
-    dic = {}
-    for i in sys.argv[3:]:
-        if i.split("=")[0] in ["dt", "sort"]:
-            dic[i.split("=")[0]] = "=".join(i.split("=")[1:])
-
     if path:
-        print_tree(get_value_by_path(data, path)[name], path=path, **dic)
+        print_tree(get_value_by_path(data, path)[name], path=path, **kwargs)
     else:
-        print_tree(data["classes"], path=path, **dic)
+        print_tree(data["classes"], path=path, **kwargs)
 
 elif sys.argv[1] == "graph":
     try:
