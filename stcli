@@ -1,0 +1,336 @@
+#!/usr/bin/python3
+
+import json
+import sys
+import hashlib 
+import copy
+import os
+from datetime import date, datetime, timedelta
+from colors import color
+
+def load_json():
+    file_path = os.path.expanduser("~/.stcli/data.json")
+    with open(file_path, "r") as f:
+        return json.load(f)
+
+def dump_json(data):
+    file_path = os.path.expanduser("~/.stcli/data.json")
+    try:
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=2)
+    except FileNotFoundError:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=2)
+
+def text_to_color(text):
+    raw = hashlib.sha256(text.encode()).hexdigest()[:6]
+    split = [raw[:2], raw[2:4], raw[4:]]
+    split = [int(i, 16) for i in split]
+    avg = sum(split)/3
+    if avg <= 128:
+        split = [min(255, 2 * i) for i in split]
+    return "#" + "".join(hex(i)[2:].rjust(2, "0") for i in split)
+
+def verifypath(path):
+    if path == "":
+        return True
+    keys = path.split("/")
+    if len(keys) > 3:
+        print("path has been truncated to", "/".join(keys[:3]))
+    for k in keys:
+        if k[0] == "_":
+            print("error: elements cannot start with _")
+            return False
+    return True
+
+def get_value_by_path(data, path):
+    keys = path.split('/')  # Split the path into keys
+    current = data["classes"]  # Start at the root of the dictionary
+
+    layer = 0
+    into_account = []
+    for key in keys[:-1]:  # Traverse all keys except the last one
+        into_account.append(key)
+        # Ensure the key exists and is a dictionary
+        if key not in current or not isinstance(current[key], dict):
+            if key[0] != "_":
+                current[key] = {"_color": text_to_color("/".join(into_account))}  # Create a new dictionary if necessary
+            else:
+                current[key] = {}
+        current = current[key]  # Move deeper into the dictionary
+        layer += 1
+
+    return current
+
+def set_value_by_path(data, path, value):
+    current = get_value_by_path(data, path)
+
+    # Set the value at the final key
+    current[path.split("/")[-1]] = value
+
+def remove_value_by_path(data, path):
+    current = get_value_by_path(data, path)
+
+    # Set the value at the final key
+    del current[path.split("/")[-1]]
+
+def get_average_value_by_path(data, path, date):
+    current = get_value_by_path(data, path)[path.split("/")[-1]]
+    
+    if "_values" in current:
+        values = dict(sorted(current["_values"].items(), key=lambda x: x[0]))
+        final = 0
+        for x in values:
+            if int(x.replace("-", "")) <= int(date.replace("-", "")):
+                final = values[x]
+            else:
+                break
+        return final
+    else:
+        count = 0
+        total = 0
+        for key in current:
+            if key[0] != "_":
+                count += 1
+                total += get_average_value_by_path(data, path + "/" + key, date)
+        if count:
+            return round(total / count, 1)
+        else:
+            return 0.0
+
+def print_help():
+    print("usage: stcli [COMMAND] [ARGS]")
+    print()
+    print(color("brief introduction", style="bold"))
+    print("this tool is meant to be used for tracking progress in revision over time while preparing for a season of examinations.")
+    print("this tool is NOT meant to be used for tracking assignments.")
+    print()
+    print("each class represents one season and contains several subjects.")
+    print("each subject contains several topics.")
+    print()
+    print("all of these can be represented with a path, separated by backslashes.")
+    print("e.g. a/b/c represents topic c, under subject b, in class a.")
+    print()
+    print(color("commands", style="bold"))
+    print("stcli add [PATH] - adds a path.")
+    print("stcli rm [PATH] - removes a path.")
+    print()
+    print("stcli edit [PATH] [KWARGS] - edits a topic or subject.")
+    print("at the moment, only kwargs name and color are supported.")
+    print("e.g. stcli edit class/subj/topic1 name=topic2 color=#ff0000")
+    print("this moves class/subj/topic1 to class/subj/topic2, and changes the color to red.")
+    print()
+    print("stcli log [PATH] [NUMBER] - logs progress representing topic.")
+    print("number needs to be an integer or float from 0 to 100 (inclusive).")
+    print("you can also use stcli log [PATH] [DATE] [NUMBER] to specify a date.")
+    print("date should be in the format YYYY-MM-DD. when date is not specified, it defaults to today.")
+    print()
+    print("stcli tree [PATH] [KWARGS] - displays a tree.")
+    print("the path specified marks the head of the tree.")
+    print("at the moment, only kwargs dt (date) and sort are supported.")
+    print("dt should be in the format YYYY-MM-DD, and sort can only be either alphabetical or completion.")
+    print("e.g. stcli tree class dt=2025-01-01 sort=alphabetical")
+    print()
+    print("stcli graph [PATH] [START] [END] [GROUP]")
+    print("the path specified marks the element whose progress is shown.")
+    print("start and end should be in the format YYYY-MM-DD.")
+    print("group can either be week, month or an integer representing the number of days to group by.")
+    print("grouping by 7 days is equal to grouping by week.")
+
+def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today())):
+    branch = "├── "
+    branch_end = "└── "
+    side = "│   "
+    empty_space = "    "
+
+    # If tree_data contains a "_color" key, extract its value; otherwise, default to "white"
+    color_value = tree_data.get("_color", "white")
+
+    # If path is not empty, print the current node
+    if path:
+        current_value = get_average_value_by_path(data, path, dt)
+        display_name = path.split("/")[-1]  # The last segment of the path
+        print(prefix + ((branch_end if is_last else branch) if depth else "") + color(display_name, color_value, style="bold") + f" - {current_value}%")
+
+    # Adjust the prefix for the next level of child nodes
+    new_prefix = prefix
+    if depth:
+        new_prefix += (empty_space if is_last else side)
+    # Get all child elements that do not start with "_"
+    children = [key for key in tree_data if not key.startswith("_")]
+    if sort == "alphabetical":
+        children.sort()
+    elif sort == "completion":
+        children.sort(key=lambda child: get_average_value_by_path(data, f"{path}/{child}" if path else child, dt), reverse=True)
+
+    # If there are children, recurse into each one
+    for i, child in enumerate(children):
+        child_path = f"{path}/{child}" if path else child  # Update the path for this child
+        print_tree(
+            tree_data[child],  # Pass the subtree at the child
+            depth+1,
+            child_path,        # Pass the updated path
+            new_prefix,        # Pass the new prefix
+            is_last=(i == len(children) - 1),  # Check if this is the last child
+            sort=sort,
+            dt=dt
+        )
+
+data = load_json()
+
+if len(sys.argv) == 1:
+    print_help()
+    exit()
+
+try:
+    sys.argv[2]
+except:
+    if sys.argv[1] != "tree":
+        print_help()
+        exit()
+    else:
+        path = "/"
+else:
+    path = sys.argv[2]
+
+keys = [a for a in path.split("/") if a][:3]
+path = "/".join(keys)
+try:
+    name = keys[-1]
+except:
+    name = ""
+
+if not verifypath(path):
+    exit()
+
+if sys.argv[1] in ["add", "rm", "edit", "log"]:    
+    if sys.argv[1] != "add":
+        if path.split("/")[-1] not in get_value_by_path(data, path):
+            print("path not found. please add it first.")
+            exit()
+
+    match sys.argv[1]:
+        case "add":
+            if name in get_value_by_path(data, path):
+                print("there is already an existing element at this location.")
+                print("if you would like to overwrite it, please remove it first.")
+                exit() 
+
+            set_value_by_path(data, path, {"_color": text_to_color(path)})
+
+        case "rm":
+            remove_value_by_path(data, path) 
+
+        case "edit":
+            newpath = path
+            for i in sys.argv[3:]:
+                key = i.split("=")[0]
+                value = "=".join(i.split("=")[1:])
+                if key == "name":
+                    newpath = "/".join(path.split("/")[:-1]) + "/" + value
+                    set_value_by_path(data, newpath, copy.deepcopy(get_value_by_path(data, path)[name]))
+                    remove_value_by_path(data, path)
+                elif key != "values":
+                    set_value_by_path(data, newpath + "/_" + key, value)
+
+        case "log":
+            if len(keys) < 3:
+                print("only subjects (depth 3) can be logged.")
+                exit()
+
+            if len(sys.argv) == 4:
+                vdate = str(date.today())
+                value = float(sys.argv[3])
+            elif len(sys.argv) >= 5:
+                try:
+                    datetime.strptime(sys.argv[3], "%Y-%m-%d")
+                except:
+                    print("invalid date. date should be in format YYYY-MM-DD.")
+                    exit()
+                else:
+                    vdate = sys.argv[3]
+                    value = float(sys.argv[4])
+            else:
+                print_help()
+                exit()
+
+            if value < 0 or value > 100:
+                print("value must be between 0 and 100 (inclusive).")
+                exit()
+
+            set_value_by_path(data, path + "/_values/" + vdate, value)
+
+elif sys.argv[1] == "tree":
+    dic = {}
+    for i in sys.argv[3:]:
+        if i.split("=")[0] in ["dt", "sort"]:
+            dic[i.split("=")[0]] = "=".join(i.split("=")[1:])
+
+    if path:
+        print_tree(get_value_by_path(data, path)[name], path=path, **dic)
+    else:
+        print_tree(data["classes"], path=path, **dic)
+
+elif sys.argv[1] == "graph":
+    try:
+        start = datetime.strptime(sys.argv[3], "%Y-%m-%d")
+        end = datetime.strptime(sys.argv[4], "%Y-%m-%d")
+    except:
+        print("invalid date. date should be in format YYYY-MM-DD.")
+        exit()
+    
+    # Grouping parameter
+    group_by = sys.argv[5].lower() if len(sys.argv) > 5 else "day"
+
+    graph_data = {}
+
+    # Grouping logic
+    if group_by == "month":
+        current = start
+        while current <= end:
+            month_key = current.strftime("%Y-%m-01")
+            month_end = (current.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+            month_end = min(month_end, end)  # Ensure we don't go past the end date
+
+            value = get_average_value_by_path(data, path, month_end.strftime("%Y-%m-%d"))
+            graph_data[month_key] = value
+            current = month_end + timedelta(days=1)
+
+    elif group_by == "week":
+        current = start
+        while current <= end:
+            week_key = current.strftime("%Y-%m-%d")  # Use the first day as the key
+            week_end = min(current + timedelta(days=6), end)  # Ensure we don't go past the end date
+
+            value = get_average_value_by_path(data, path, week_end.strftime("%Y-%m-%d"))
+            graph_data[week_key] = value
+            current = week_end + timedelta(days=1)
+
+    elif group_by.isdigit():
+        group_days = int(group_by)
+        current = start
+        while current <= end:
+            group_key = f"{current.strftime('%Y-%m-%d')} to {(current + timedelta(days=group_days - 1)).strftime('%Y-%m-%d')}"
+            group_end = min(current + timedelta(days=group_days - 1), end)
+
+            value = get_average_value_by_path(data, path, group_end.strftime("%Y-%m-%d"))
+            graph_data[group_key] = value
+            current = group_end + timedelta(days=1)
+
+    else:  # Default to daily grouping
+        for i in range((end - start).days + 1):
+            dt = start + timedelta(days=i)
+            graph_data[str(dt)[:10]] = get_average_value_by_path(data, path, str(dt)[:10])
+
+    # Graph rendering
+    width = os.get_terminal_size().columns - 11 - 7
+
+    for i in graph_data:
+        print(
+            i[:10].ljust(10), 
+            ("█" * int(width * graph_data[i] / 100)).ljust(width, " "),
+            f"{graph_data[i]:.1f}%".rjust(6)
+        )
+
+dump_json(data)

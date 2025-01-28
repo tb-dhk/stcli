@@ -1,0 +1,53 @@
+{
+  "classes": {
+    "c1": {
+      "_color": "#d0f631",
+      "chinese": {
+        "_color": "#ffc80e",
+        "paper 2": {
+          "_color": "#ffffa6"
+        },
+        "paper 1": {
+          "_color": "#66a8f3"
+        }
+      },
+      "general paper": {
+        "_color": "#00ff3a",
+        "paper 1": {
+          "_color": "#e103ff"
+        },
+        "paper 2": {
+          "_color": "#ff4eff"
+        }
+      },
+      "computing": {
+        "_color": "#dfeb71"
+      },
+      "physics": {
+        "_color": "#e559f9"
+      },
+      "mathematics": {
+        "_color": "#38d7fd",
+        "01 sequences and series": {
+          "_color": "#6674ff",
+          "_values": {
+            "2025-01-28": 33.3
+          }
+        },
+        "02 graphs and transformation": {
+          "_color": "#e8e98e"
+        },
+        "03 equations and inequalities": {
+          "_color": "#4454eb"
+        },
+        "04 functions": {
+          "_color": "#98ffff"
+        }
+      },
+      "economics": {
+        "_color": "#b2f8a7"
+      }
+    }
+  },
+  "profile": {}
+}
