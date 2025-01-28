@@ -100,43 +100,97 @@ def get_average_value_by_path(data, path, date):
             return 0.0
 
 def print_help():
-    print("usage: stcli [COMMAND] [ARGS]")
+    print(color("usage: stcli [COMMAND] [ARGS]", style="bold"))
     print()
+
     print(color("brief introduction", style="bold"))
-    print("this tool is meant to be used for tracking progress in revision over time while preparing for a season of examinations.")
-    print("this tool is NOT meant to be used for tracking assignments.")
+    print(
+        "stcli is a command-line tool designed for tracking progress during a revision season "
+        "while preparing for examinations."
+    )
+    print(color("note:", style="bold") + " this tool is " + color("NOT", style="underline") + " meant to be used for tracking assignments.")
     print()
-    print("each class represents one season and contains several subjects.")
-    print("each subject contains several topics.")
+    print("each " + color("class", style="underline") + " represents one revision season and contains several subjects.")
+    print("each " + color("subject", style="underline") + " contains several topics.")
     print()
-    print("all of these can be represented with a path, separated by backslashes.")
-    print("e.g. a/b/c represents topic c, under subject b, in class a.")
+    print(
+        "paths in the hierarchy are represented using backslashes. "
+        + color("example:", style="bold")
+    )
+    print("    class/subject/topic -> topic is under subject, which is under class.")
     print()
+
     print(color("commands", style="bold"))
-    print("stcli add [PATH] - adds a path.")
-    print("stcli rm [PATH] - removes a path.")
     print()
-    print("stcli edit [PATH] [KWARGS] - edits a topic or subject.")
-    print("at the moment, only kwargs name and color are supported.")
-    print("e.g. stcli edit class/subj/topic1 name=topic2 color=#ff0000")
-    print("this moves class/subj/topic1 to class/subj/topic2, and changes the color to red.")
+
+    # Add Command
+    print(color("stcli add [PATH]", style="bold"))
+    print("    adds a path to the hierarchy.")
     print()
-    print("stcli log [PATH] [NUMBER] - logs progress representing topic.")
-    print("number needs to be an integer or float from 0 to 100 (inclusive).")
-    print("you can also use stcli log [PATH] [DATE] [NUMBER] to specify a date.")
-    print("date should be in the format YYYY-MM-DD. when date is not specified, it defaults to today.")
+
+    # Remove Command
+    print(color("stcli rm [PATH]", style="bold"))
+    print("    removes the specified path from the hierarchy.")
     print()
-    print("stcli tree [PATH] [KWARGS] - displays a tree.")
-    print("the path specified marks the head of the tree.")
-    print("at the moment, only kwargs dt (date) and sort are supported.")
-    print("dt should be in the format YYYY-MM-DD, and sort can only be either alphabetical or completion.")
-    print("e.g. stcli tree class dt=2025-01-01 sort=alphabetical")
+
+    # Edit Command
+    print(color("stcli edit [PATH] [KWARGS]", style="bold"))
+    print("    edits a topic or subject. supported kwargs:")
+    print("        " + color("- name", style="underline") + ": renames the element.")
+    print("        " + color("- color", style="underline") + ": changes the color (e.g., #ff0000 for red).")
+    print(
+        "    "
+        + color("example:", style="bold")
+        + " stcli edit class/subject/topic1 name=topic2 color=#ff0000"
+    )
+    print(
+        "    this moves class/subject/topic1 to class/subject/topic2 and changes its color to red."
+    )
     print()
-    print("stcli graph [PATH] [START] [END] [GROUP]")
-    print("the path specified marks the element whose progress is shown.")
-    print("start and end should be in the format YYYY-MM-DD.")
-    print("group can either be week, month or an integer representing the number of days to group by.")
-    print("grouping by 7 days is equal to grouping by week.")
+
+    # Log Command
+    print(color("stcli log [PATH] [NUMBER]", style="bold"))
+    print("    logs progress for a topic.")
+    print("    " + color("number", style="underline") + " must be an integer or float from 0 to 100 (inclusive).")
+    print()
+
+    print(color("stcli log [PATH] [DATE] [NUMBER]", style="bold"))
+    print("    logs progress with a specified date.")
+    print("    " + color("date", style="underline") + " should be in the format YYYY-MM-DD.")
+    print()
+
+    # Tree Command
+    print(color("stcli tree [PATH] [KWARGS]", style="bold"))
+    print("    displays a tree of the hierarchy, starting from the specified path.")
+    print("    supported kwargs:")
+    print("        " + color("- dt", style="underline") + ": date in YYYY-MM-DD format, to view progress for that date.")
+    print("        " + color("- sort", style="underline") + ": sort by 'alphabetical' or 'completion'.")
+    print(
+        "    "
+        + color("example:", style="bold")
+        + " stcli tree class dt=2025-01-01 sort=alphabetical"
+    )
+    print()
+
+    # Graph Command
+    print(color("stcli graph [PATH] [START] [END] [GROUP]", style="bold"))
+    print("    displays progress as a graph for the specified element.")
+    print("    arguments:")
+    print(
+        "        "
+        + color("- START and END", style="underline")
+        + ": dates in YYYY-MM-DD format."
+    )
+    print(
+        "        "
+        + color("- GROUP", style="underline")
+        + ": group progress by 'week', 'month', or an integer (number of days)."
+    )
+    print(
+        "    "
+        + color("example:", style="bold")
+        + " stcli graph class/subject 2025-01-01 2025-01-31 week"
+    )
 
 def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today())):
     branch = "├── "
