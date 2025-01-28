@@ -121,18 +121,13 @@ stcli graph class/subject 2025-01-01 2025-01-31 week
 
 ---
 
-## example paths
-
-- `class/subject/topic`: refers to `topic` under `subject` in `class`.
-- hierarchies can be nested to reflect your structure.
-
----
-
 ## installation
 
-1. clone the repository.
-2. install dependencies (if any).
-3. run `stcli` from your terminal.
+```
+git clone https://github.com/tb-dhk/study-tracker
+cd study-tracker
+make install
+```
 
 ---
 
