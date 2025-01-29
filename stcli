@@ -254,7 +254,8 @@ for arg in sys.argv[2:]:
             exit()
     else:
         # Treat non-keyword argument as the path
-        path = arg
+        if path == "/":
+            path = arg
 
 # Normalize the path and extract keys
 keys = [a for a in path.split("/") if a][:3]
@@ -271,7 +272,7 @@ if not verifypath(path):
 
 if sys.argv[1] in ["add", "rm", "edit", "log"]:    
     if sys.argv[1] != "add":
-        if path.split("/")[-1] not in get_value_by_path(data, path):
+        if name not in get_value_by_path(data, path):
             print("path not found. please add it first.")
             exit()
 
