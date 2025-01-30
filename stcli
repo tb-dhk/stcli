@@ -323,7 +323,7 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
                 print("value must be between 0 and 100 (inclusive).")
                 exit()
 
-            set_value_by_path(data, path + "/_values/" + vdate, value)
+            set_value_by_path(data, path + "/_values/" + vdate, round(value, 1))
 
 elif sys.argv[1] == "tree":
     if path:
