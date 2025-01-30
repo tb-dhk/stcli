@@ -290,7 +290,7 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
 
         case "edit":
             newpath = path
-            for key, value in kwargs:
+            for key, value in kwargs.items():
                 if key == "name":
                     newpath = "/".join(path.split("/")[:-1]) + "/" + value
                     set_value_by_path(data, newpath, copy.deepcopy(get_value_by_path(data, path)[name]))
