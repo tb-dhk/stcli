@@ -28,8 +28,9 @@ def text_to_color(text):
     split = [raw[:2], raw[2:4], raw[4:]]
     split = [int(i, 16) for i in split]
     avg = sum(split)/3
-    if avg <= 128:
+    while avg <= 128:
         split = [min(255, 2 * i) for i in split]
+        avg = sum(split)/3
     return "#" + "".join(hex(i)[2:].rjust(2, "0") for i in split)
 
 def verifypath(path):
@@ -231,6 +232,17 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
             dt=dt
         )
 
+def refresh_colors(tree, address):
+    if "_color" in tree.keys():
+        tree["_color"] = text_to_color(address)
+    for key in tree:
+        if type(tree[key]) is dict and key[0] != "_":
+            naddress = address + "/" + key
+            if naddress[0] == "/":
+                naddress = naddress[1:]
+            refresh_colors(tree[key], naddress)
+    return tree
+
 data = load_json()
 
 if len(sys.argv) == 1:
@@ -391,5 +403,7 @@ elif sys.argv[1] == "graph":
             ("█" * int(width * graph_data[i] / 100)).ljust(width, " "),
             f"{graph_data[i]:.1f}%".rjust(6)
         )
+elif sys.argv[1] == "refreshcolors":
+    data["classes"] = refresh_colors(data["classes"], "")
 
 dump_json(data)
