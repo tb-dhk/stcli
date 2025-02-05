@@ -100,6 +100,15 @@ def get_average_value_by_path(data, path, date):
         else:
             return 0.0
 
+def get_weight_by_path(data, path):
+    if path.count("/") == 0:
+        return 100
+    else:
+        above = get_value_by_path(data, path)
+        percentage = len([i for i in above if i[0] != "_"])
+        newpath = "/".join(path.split("/")[:-1])
+        return get_weight_by_path(data, newpath) / percentage
+
 def print_help():
     print(color("usage: stcli [COMMAND] [ARGS]", style="bold"))
     print()
@@ -164,12 +173,18 @@ def print_help():
     print(color("stcli tree [PATH] [KWARGS]", style="bold"))
     print("    displays a tree of the hierarchy, starting from the specified path.")
     print("    supported kwargs:")
-    print("        " + color("- dt", style="underline") + ": date in YYYY-MM-DD format, to view progress for that date.")
-    print("        " + color("- sort", style="underline") + ": sort by 'alphabetical' or 'completion'.")
+    print("        " + color("- dt", style="underline") + ": specify a date (YYYY-MM-DD) to view progress for that date.")
+    print("        " + color("- sort", style="underline") + ": sort the tree by 'alphabetical' or 'completion'.")
+    print("        " + color("- values", style="underline") + ": specify what the numerical values in the output should be.")
+    print("            - 'completion' (default): how much each class/subject/topic has been completed (percentage).")
+    print("            - 'weightage': the weightage of each class/subject/topic.")
+    print("            - 'overall': contribution of each class/subject/topic to the overall score (weightage × completion ÷ 100).")
+    print("        " + color("- dp", style="underline") + ": specifies the maximum decimal points of numerical values shown.")
+    print()
     print(
         "    "
         + color("example:", style="bold")
-        + " stcli tree class dt=2025-01-01 sort=alphabetical"
+        + " stcli tree class dt=2025-01-01 sort=alphabetical values=completion dp=1"
     )
     print()
 
@@ -193,7 +208,7 @@ def print_help():
         + " stcli graph class/subject 2025-01-01 2025-01-31 week"
     )
 
-def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today())):
+def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today()), values="default", dp=1):
     branch = "├── "
     branch_end = "└── "
     side = "│   "
@@ -204,7 +219,16 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
 
     # If path is not empty, print the current node
     if path:
-        current_value = get_average_value_by_path(data, path, dt)
+        weightage = get_weight_by_path(data, path)
+        completion = get_average_value_by_path(data, path, dt)
+        match values:
+            case "weightage":
+                current_value = weightage 
+            case "overall":
+                current_value = weightage * completion / 100
+            case _:
+                current_value = completion
+        current_value = round(current_value, int(dp))
         display_name = path.split("/")[-1]  # The last segment of the path
         print(prefix + ((branch_end if is_last else branch) if depth else "") + color(display_name, color_value, style="bold") + f" - {current_value}%")
 
@@ -229,7 +253,9 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
             new_prefix,        # Pass the new prefix
             is_last=(i == len(children) - 1),  # Check if this is the last child
             sort=sort,
-            dt=dt
+            dt=dt,
+            values=values,
+            dp=dp
         )
 
 def refresh_colors(tree, address):
@@ -335,7 +361,7 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
                 print("value must be between 0 and 100 (inclusive).")
                 exit()
 
-            set_value_by_path(data, path + "/_values/" + vdate, round(value, 1))
+            set_value_by_path(data, path + "/_values/" + vdate, value)
 
 elif sys.argv[1] == "tree":
     if path:

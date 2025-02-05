@@ -17,7 +17,8 @@ stcli [command] [args]
 - each class represents a revision season.
 - classes contain several subjects, and subjects contain multiple topics.
 - paths use backslashes (`/`) to separate elements in the hierarchy.  
-  for example: `class/subject/topic`.
+  - for example: `class/subject/topic`.
+  - note that you might need to surround an element with quotes if it contains special characters.
 
 ---
 
@@ -84,10 +85,15 @@ stcli tree [path] [kwargs]
 - supported `kwargs`:
   - `dt`: specify a date (`yyyy-mm-dd`) to view progress for that date.
   - `sort`: sort the tree by `alphabetical` or `completion`.
-
+  - `values`: specify what the numerical values in the output should be.
+    - `completion` (default): how much each class/subject/topic has been completed (percentage)
+    - `weightage`: the weightage of each class/subject/topic
+    - `overall`: the amount by which each class/subject/topic contributes to the overall score; that is, the weightage multiplied by completion divided by 100
+  - `dp`: specifies the maximum decimal point of the numerical values shown.
+    
 #### example
 ```bash
-stcli tree class dt=2025-01-01 sort=alphabetical
+stcli tree class dt=2025-01-01 sort=alphabetical values=completion dp=1
 ```
 
 ---
