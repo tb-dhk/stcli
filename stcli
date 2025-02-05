@@ -205,7 +205,7 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
     branch = "├── "
     branch_end = "└── "
     side = "│   "
-    empty_space = ""
+    empty_space = "    "
 
     # If tree_data contains a "_color" key, extract its value; otherwise, default to "white"
     color_value = tree_data.get("_color", "white")
