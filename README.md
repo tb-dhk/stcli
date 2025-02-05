@@ -17,7 +17,7 @@ stcli [command] [args]
 - each class represents a revision season.
 - classes contain several subjects, and subjects contain multiple topics.
 - paths use backslashes (`/`) to separate elements in the hierarchy.  
-  - for example: `class/subject/topic`.
+  - for example: `element`.
   - note that you might need to surround an element with quotes if it contains special characters.
 
 ---
@@ -51,9 +51,9 @@ stcli edit [path] [kwargs]
 
 #### example
 ```bash
-stcli edit class/subject/topic1 name=topic2 color=#ff0000
+stcli edit element1 name=topic2 color=#ff0000
 ```
-- moves `class/subject/topic1` to `class/subject/topic2` and sets the color to red.
+- moves `element1` to `class/subject/topic2` and sets the color to red.
 
 ---
 
@@ -71,8 +71,8 @@ stcli log [path] [date] [number]
 
 #### examples
 ```bash
-stcli log class/subject/topic 50
-stcli log class/subject/topic 2025-01-27 75
+stcli log element 50
+stcli log element 2025-01-27 75
 ```
 
 ---
@@ -86,9 +86,9 @@ stcli tree [path] [kwargs]
   - `dt`: specify a date (`yyyy-mm-dd`) to view progress for that date.
   - `sort`: sort the tree by `alphabetical` or `completion`.
   - `values`: specify what the numerical values in the output should be.
-    - `completion` (default): how much each class/subject/topic has been completed (percentage)
-    - `weightage`: the weightage of each class/subject/topic
-    - `overall`: the amount by which each class/subject/topic contributes to the overall score; that is, the weightage multiplied by completion divided by 100
+    - `completion` (default): how much each element has been completed (percentage)
+    - `weightage`: the weightage of each element
+    - `overall`: each element's overall score contribution (weightage × completion ÷ 100).
   - `dp`: specifies the maximum decimal point of the numerical values shown.
     
 #### example

@@ -176,9 +176,9 @@ def print_help():
     print("        " + color("- dt", style="underline") + ": specify a date (YYYY-MM-DD) to view progress for that date.")
     print("        " + color("- sort", style="underline") + ": sort the tree by 'alphabetical' or 'completion'.")
     print("        " + color("- values", style="underline") + ": specify what the numerical values in the output should be.")
-    print("            - 'completion' (default): how much each class/subject/topic has been completed (percentage).")
-    print("            - 'weightage': the weightage of each class/subject/topic.")
-    print("            - 'overall': contribution of each class/subject/topic to the overall score (weightage × completion ÷ 100).")
+    print("            - 'completion' (default): how much each element has been completed (percentage).")
+    print("            - 'weightage': the weightage of each element.")
+    print("            - 'overall': each element's overall score contribution (weightage × completion ÷ 100).")
     print("        " + color("- dp", style="underline") + ": specifies the maximum decimal points of numerical values shown.")
     print()
     print(
