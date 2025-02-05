@@ -17,7 +17,7 @@ stcli [command] [args]
 - each class represents a revision season.
 - classes contain several subjects, and subjects contain multiple topics.
 - paths use backslashes (`/`) to separate elements in the hierarchy.  
-  - for example: `element`.
+  - for example: `class/subject/topic/subtopic`.
   - note that you might need to surround an element with quotes if it contains special characters.
 
 ---
@@ -63,6 +63,8 @@ stcli log [path] [number]
 ```
 - logs progress for a topic.  
 - `number` must be an integer or float from 0 to 100 (inclusive).
+- note that the path specified cannot have children.
+- in this syntax, the date is assumed to be today.
 
 ```bash
 stcli log [path] [date] [number]
