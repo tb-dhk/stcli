@@ -37,8 +37,6 @@ def verifypath(path):
     if path == "":
         return True
     keys = path.split("/")
-    if len(keys) > 3:
-        print("path has been truncated to", "/".join(keys[:3]))
     for k in keys:
         if k[0] == "_":
             print("error: elements cannot start with _")
@@ -78,8 +76,9 @@ def remove_value_by_path(data, path):
 
 def get_average_value_by_path(data, path, date):
     current = get_value_by_path(data, path)[path.split("/")[-1]]
-    
-    if "_values" in current:
+    children = [i for i in current if i[0] != "_"]
+
+    if "_values" in current and not children:
         values = dict(sorted(current["_values"].items(), key=lambda x: x[0]))
         final = 0
         for x in values:
@@ -296,7 +295,7 @@ for arg in sys.argv[2:]:
             path = arg
 
 # Normalize the path and extract keys
-keys = [a for a in path.split("/") if a][:3]
+keys = [a for a in path.split("/") if a]
 path = "/".join(keys)
 
 # Extract the name from the path
@@ -337,8 +336,11 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
                     set_value_by_path(data, newpath + "/_" + key, value)
 
         case "log":
-            if len(keys) < 3:
-                print("only subjects (depth 3) can be logged.")
+            dic = get_value_by_path(data, path)[name]
+            children = [i for i in dic if i[0] != "_"]
+
+            if children:
+                print("only elements without children can be logged.")
                 exit()
 
             if len(sys.argv) == 4:
