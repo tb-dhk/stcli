@@ -14,8 +14,7 @@ stcli [command] [args]
 ```
 
 ### structure 
-- each class represents a revision season.
-- classes contain several subjects, and subjects contain multiple topics.
+- this tool uses a hierarchical system.
 - paths use backslashes (`/`) to separate elements in the hierarchy.  
   - for example: `class/subject/topic/subtopic`.
   - note that you might need to surround an element with quotes if it contains special characters.

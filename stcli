@@ -109,113 +109,103 @@ def get_weight_by_path(data, path):
         return get_weight_by_path(data, newpath) / percentage
 
 def print_help():
-    print(color("usage: stcli [COMMAND] [ARGS]", style="bold"))
+    print(color("stcli", style="bold"))
+    print("a command-line tool for tracking progress during revision seasons while preparing for exams.")
+    print()
+    print(color("note:", style="bold"), "this tool is not meant for tracking assignments.")
     print()
 
-    print(color("brief introduction", style="bold"))
-    print(
-        "stcli is a command-line tool designed for tracking progress during a revision season "
-        "while preparing for examinations."
-    )
-    print(color("note:", style="bold") + " this tool is " + color("NOT", style="underline") + " meant to be used for tracking assignments.")
-    print()
-    print("each " + color("class", style="underline") + " represents one revision season and contains several subjects.")
-    print("each " + color("subject", style="underline") + " contains several topics.")
-    print()
-    print(
-        "paths in the hierarchy are represented using backslashes. "
-        + color("example:", style="bold")
-    )
-    print("    class/subject/topic -> topic is under subject, which is under class.")
+    # general syntax
+    print(color("general syntax", style="bold"))
+    print(color("stcli [command] [args]", style="underline"))
     print()
 
-    print(color("commands", style="bold"))
+    # structure
+    print(color("structure", style="bold"))
+    print("- this tool uses a hierarchical system.")
+    print("- paths use backslashes ('/') to separate elements in the hierarchy.")
+    print("    - for example: class/subject/topic/subtopic")
+    print("    - note that you might need to surround an element with quotes if it contains special characters.")
     print()
 
-    # Add Command
-    print(color("stcli add [PATH]", style="bold"))
-    print("    adds a path to the hierarchy.")
+    # usage
+    print(color("usage", style="bold"))
+    print("the following commands are available:")
     print()
 
-    # Remove Command
-    print(color("stcli rm [PATH]", style="bold"))
-    print("    removes the specified path from the hierarchy.")
+    # add paths
+    print(color("1. add paths", style="bold"))
+    print(color("stcli add [path]", style="underline"))
+    print("adds a new path to the hierarchy.")
     print()
 
-    # Edit Command
-    print(color("stcli edit [PATH] [KWARGS]", style="bold"))
-    print("    edits a topic or subject. supported kwargs:")
-    print("         " + color("name", style="underline") + ": renames the element.")
-    print("         " + color("color", style="underline") + ": changes the color (e.g., #ff0000 for red).")
-    print(
-        "    "
-        + color("example:", style="bold")
-        + " stcli edit class/subject/topic1 name=topic2 color=#ff0000"
-    )
-    print(
-        "    this moves class/subject/topic1 to class/subject/topic2 and changes its color to red."
-    )
+    # remove paths
+    print(color("2. remove paths", style="bold"))
+    print(color("stcli rm [path]", style="underline"))
+    print("removes the specified path from the hierarchy.")
     print()
 
-    # Log Command
-    print(color("stcli log [PATH] [NUMBER]", style="bold"))
-    print("    logs progress for a topic.")
-    print("    " + color("number", style="underline") + " must be an integer or float from 0 to 100 (inclusive).")
-    print("    - the specified path cannot have children.")
-    print("    - if no date is provided, it is assumed to be today.")
+    # edit topics or subjects
+    print(color("3. edit topics or subjects", style="bold"))
+    print(color("stcli edit [path] [kwargs]", style="underline"))
+    print("edits a topic or subject.")
+    print("supported kwargs:")
+    print("- name: rename the element.")
+    print("- color: change the color (e.g., #ff0000 for red).")
+    print()
+    print(color("example:", style="bold"), "stcli edit element1 name=topic2 color=#ff0000")
+    print("moves 'element1' to 'class/subject/topic2' and sets the color to red.")
     print()
 
-    print(color("stcli log [PATH] [DATE] [NUMBER]", style="bold"))
-    print("    logs progress with a specified date.")
-    print("    " + color("date", style="underline") + " should be in the format YYYY-MM-DD.")
-    print("    - the specified path cannot have children.")
-    print("    - if no date is provided, it is assumed to be today.")
+    # log progress
+    print(color("4. log progress", style="bold"))
+    print(color("stcli log [path] [number]", style="underline"))
+    print("logs progress for a topic (0-100).")
+    print("path specified cannot have children.")
+    print()
+    print(color("stcli log [path] [date] [number]", style="underline"))
+    print("logs progress with a specified date (yyyy-mm-dd).")
+    print()
+    print(color("examples:", style="bold"))
+    print("stcli log element 50")
+    print("stcli log element 2025-01-27 75")
     print()
 
-    # Tree Command
-    print(color("stcli tree [PATH] [KWARGS]", style="bold"))
-    print("    displays a tree of the hierarchy, starting from the specified path.")
-    print("    supported kwargs:")
-    print("         " + color("dt", style="underline") + ": specify a date (YYYY-MM-DD) to view progress for that date.")
-    print("         " + color("sort", style="underline") + ": sort the tree by 'alphabetical' or 'completion'.")
-    print("         " + color("values", style="underline") + ": specify what the numerical values in the output should be.")
-    print("            - 'completion' (default): how much each element has been completed (percentage).")
-    print("            - 'weightage': the weightage of each element.")
-    print("            - 'overall': each element's overall score contribution (weightage × completion ÷ 100).")
-    print("         " + color("dp", style="underline") + ": specifies the maximum decimal points of numerical values shown.")
+    # display tree
+    print(color("5. display tree", style="bold"))
+    print(color("stcli tree [path] [kwargs]", style="underline"))
+    print("displays a tree of the hierarchy, starting from the specified path.")
+    print("supported kwargs:")
+    print("- dt: specify a date (yyyy-mm-dd) to view progress for that date.")
+    print("- sort: sort the tree by 'alphabetical' or 'completion'.")
+    print("- values: specify numerical values in the output.")
+    print("    - completion (default): percentage completed.")
+    print("    - weightage: weightage of each element.")
+    print("    - overall: each element's contribution (weightage × completion ÷ 100).")
+    print("- dp: maximum decimal points of displayed values.")
     print()
-    print(
-        "    "
-        + color("example:", style="bold")
-        + " stcli tree class dt=2025-01-01 sort=alphabetical values=completion dp=1"
-    )
+    print(color("example:", style="bold"), "stcli tree class dt=2025-01-01 sort=alphabetical values=completion dp=1")
     print()
 
-    # Graph Command
-    print(color("stcli graph [PATH] [START] [END] [GROUP]", style="bold"))
-    print("    displays progress as a graph for the specified element.")
-    print("    arguments:")
-    print(
-        "        "
-        + color("START and END", style="underline")
-        + ": dates in YYYY-MM-DD format."
-    )
-    print(
-        "        "
-        + color("GROUP", style="underline")
-        + ": group progress by 'week', 'month', or an integer (number of days)."
-    )
-    print(
-        "    "
-        + color("example:", style="bold")
-        + " stcli graph class/subject 2025-01-01 2025-01-31 week"
-    )
+    # display graph
+    print(color("6. display graph", style="bold"))
+    print(color("stcli graph [path] [start] [end] [group]", style="underline"))
+    print("displays progress as a graph.")
+    print("arguments:")
+    print("- start, end: date range (yyyy-mm-dd).")
+    print("- group: grouping mode.")
+    print("    - week: first day of the week.")
+    print("    - month: last day of the month.")
+    print("    - integer: custom number of days.")
+    print()
+    print(color("example:", style="bold"), "stcli graph class/subject 2025-01-01 2025-01-31 week")
+    print()
 
 def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today()), values="default", dp=1):
     branch = "├── "
     branch_end = "└── "
     side = "│   "
-    empty_space = "    "
+    empty_space = ""
 
     # If tree_data contains a "_color" key, extract its value; otherwise, default to "white"
     color_value = tree_data.get("_color", "white")
