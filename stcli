@@ -222,6 +222,10 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
             case _:
                 current_value = completion
         current_value = round(current_value, int(dp))
+        if int(dp) == 0:
+            current_value = int(current_value)
+        else:
+            current_value = float(current_value)
         display_name = path.split("/")[-1]  # The last segment of the path
         print(prefix + ((branch_end if is_last else branch) if depth else "") + color(display_name, color_value, style="bold") + f" - {current_value}%")
 
