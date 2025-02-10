@@ -34,7 +34,7 @@ def text_to_color(text):
     return "#" + "".join(hex(i)[2:].rjust(2, "0") for i in split)
 
 def verifypath(path):
-    if path == "":
+    if path in ["", "/"]:
         return True
     keys = path.split("/")
     for k in keys:
@@ -49,16 +49,19 @@ def get_value_by_path(data, path):
 
     layer = 0
     into_account = []
-    for key in keys[:-1]:  # Traverse all keys except the last one
-        into_account.append(key)
-        # Ensure the key exists and is a dictionary
-        if key not in current or not isinstance(current[key], dict):
-            if key[0] != "_":
-                current[key] = {"_color": text_to_color("/".join(into_account))}  # Create a new dictionary if necessary
-            else:
-                current[key] = {}
-        current = current[key]  # Move deeper into the dictionary
-        layer += 1
+    try:
+        for key in keys[:-1]:  # Traverse all keys except the last one
+            into_account.append(key)
+            # Ensure the key exists and is a dictionary
+            if key not in current or not isinstance(current[key], dict):
+                if key[0] != "_":
+                    current[key] = {"_color": text_to_color("/".join(into_account))}  # Create a new dictionary if necessary
+                else:
+                    current[key] = {}
+            current = current[key]  # Move deeper into the dictionary
+            layer += 1
+    except:
+        pass
 
     return current
 
@@ -75,7 +78,12 @@ def remove_value_by_path(data, path):
     del current[path.split("/")[-1]]
 
 def get_average_value_by_path(data, path, date):
-    current = get_value_by_path(data, path)[path.split("/")[-1]]
+    current = get_value_by_path(data, path)
+    try:
+        current = current[path.split("/")[-1]]
+    except:
+        current = get_value_by_path(data, path)
+
     children = [i for i in current if i[0] != "_"]
 
     if "_values" in current and not children:
@@ -91,6 +99,7 @@ def get_average_value_by_path(data, path, date):
         count = 0
         total = 0
         for key in current:
+            path = "/".join([i for i in path.split("/") if i])
             if key[0] != "_":
                 count += 1
                 total += get_average_value_by_path(data, path + "/" + key, date)
@@ -287,14 +296,12 @@ for arg in sys.argv[2:]:
             print(f"Invalid argument: {arg}")
             print_help()
             exit()
-    else:
-        # Treat non-keyword argument as the path
-        if path == "/":
-            path = arg
 
 # Normalize the path and extract keys
 keys = [a for a in path.split("/") if a]
 path = "/".join(keys)
+if not path:
+    path = "/"
 
 # Extract the name from the path
 try:
