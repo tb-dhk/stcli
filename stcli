@@ -448,12 +448,14 @@ elif sys.argv[1] == "graph":
         exit()
     
     # Grouping parameter
-    group_by = sys.argv[5].lower() if len(sys.argv) > 5 else "day"
+    groupby = kwargs.get("groupby", "day")
+    values = kwargs.get("values", "completion")
+    maximum = kwargs.get("maximum", 100)
 
     graph_data = {}
 
     # Grouping logic
-    if group_by == "month":
+    if groupby == "month":
         current = start
         while current <= end:
             month_key = current.strftime("%Y-%m-01")
@@ -461,42 +463,59 @@ elif sys.argv[1] == "graph":
             month_end = min(month_end, end)  # Ensure we don't go past the end date
 
             value = get_average_value_by_path(data, path, month_end.strftime("%Y-%m-%d"))
+            if values == "progress":
+                prev_month_end = month_end.replace(day=1) - timedelta(days=1)
+                value -= get_average_value_by_path(data, path, prev_month_end.strftime("%Y-%m-%d"))
             graph_data[month_key] = value
             current = month_end + timedelta(days=1)
 
-    elif group_by == "week":
+    elif groupby == "week":
         current = start
         while current <= end:
             week_key = current.strftime("%Y-%m-%d")  # Use the first day as the key
             week_end = min(current + timedelta(days=6), end)  # Ensure we don't go past the end date
 
             value = get_average_value_by_path(data, path, week_end.strftime("%Y-%m-%d"))
+            if values == "progress":
+                prev_week_end = week_end - timedelta(days=7)
+                value -= get_average_value_by_path(data, path, prev_week_end.strftime("%Y-%m-%d"))
             graph_data[week_key] = value
             current = week_end + timedelta(days=1)
 
-    elif group_by.isdigit():
-        group_days = int(group_by)
+    elif groupby.isdigit():
+        group_days = int(groupby)
         current = start
         while current <= end:
             group_key = f"{current.strftime('%Y-%m-%d')} to {(current + timedelta(days=group_days - 1)).strftime('%Y-%m-%d')}"
             group_end = min(current + timedelta(days=group_days - 1), end)
 
             value = get_average_value_by_path(data, path, group_end.strftime("%Y-%m-%d"))
+            if values == "progress":
+                prev_group_end = group_end - timedelta(days=group_days)
+                value -= get_average_value_by_path(data, path, prev_group_end.strftime("%Y-%m-%d"))
             graph_data[group_key] = value
             current = group_end + timedelta(days=1)
 
     else:  # Default to daily grouping
         for i in range((end - start).days + 1):
             dt = start + timedelta(days=i)
-            graph_data[str(dt)[:10]] = get_average_value_by_path(data, path, str(dt)[:10])
+            value = get_average_value_by_path(data, path, str(dt)[:10]) 
+            if values == "progress":
+                value -= get_average_value_by_path(data, path, str(dt - timedelta(days=1))[:10])
+            graph_data[str(dt)[:10]] = value
 
     # Graph rendering
     width = os.get_terminal_size().columns - 11 - 7
 
+    if maximum == "auto":
+        maximum = max(graph_data.values())
+    else:
+        maximum = int(maximum)
+
     for i in graph_data:
         print(
             i[:10].ljust(10), 
-            ("█" * int(width * graph_data[i] / 100)).ljust(width, " "),
+            ("█" * int(width * graph_data[i] / maximum)).ljust(width, " "),
             f"{graph_data[i]:.1f}%".rjust(6)
         )
 elif sys.argv[1] == "refreshcolors":
