@@ -5,6 +5,7 @@ import sys
 import hashlib 
 import copy
 import os
+import colorsys
 from datetime import date, datetime, timedelta
 from colors import color
 
@@ -38,9 +39,10 @@ def verifypath(path):
         return True
     keys = path.split("/")
     for k in keys:
-        if k[0] == "_":
-            print("error: elements cannot start with _")
-            return False
+        if k:
+            if k[0] == "_":
+                print("error: elements cannot start with _")
+                return False
     return True
 
 def get_value_by_path(data, path):
@@ -53,12 +55,14 @@ def get_value_by_path(data, path):
         into_account.append(key)
         # Ensure the key exists and is a dictionary
         if key not in current or not isinstance(current[key], dict):
-            if key[0] != "_":
-                current[key] = {"_color": text_to_color("/".join(into_account))}  # Create a new dictionary if necessary
-            else:
-                current[key] = {}
-        current = current[key]  # Move deeper into the dictionary
-        layer += 1
+            if key:
+                if key[0] != "_":
+                    current[key] = {"_color": text_to_color("/".join(into_account))}  # Create a new dictionary if necessary
+                else:
+                    current[key] = {}
+        if key:
+            current = current[key]  # Move deeper into the dictionary
+            layer += 1
 
     return current
 
@@ -75,7 +79,10 @@ def remove_value_by_path(data, path):
     del current[path.split("/")[-1]]
 
 def get_average_value_by_path(data, path, date):
-    current = get_value_by_path(data, path)[path.split("/")[-1]]
+    if path == "/":
+        current = data["classes"]
+    else:
+        current = get_value_by_path(data, path)[path.split("/")[-1]]
     children = [i for i in current if i[0] != "_"]
 
     if "_values" in current and not children:
@@ -107,6 +114,26 @@ def get_weight_by_path(data, path):
         percentage = len([i for i in above if i[0] != "_"])
         newpath = "/".join(path.split("/")[:-1])
         return get_weight_by_path(data, newpath) / percentage
+
+def get_activity_by_date(data, day, path):
+    if path == "/":
+        path = ""
+
+    children = [i for i in data if i[0] != "_"]
+    activity = {}
+    if "_values" in data and not children:
+        if day in data["_values"]:
+            dates = sorted(list(data["_values"].keys()))
+            if dates.index(day):
+                prev = dates[dates.index(day)-1]
+            else:
+                prev = 0
+            activity[path] = (prev, data["_values"][day], data["_color"])
+    else:
+        for child in children:
+            activity.update(get_activity_by_date(data[child], day, f"{path}/{child}"))
+            
+    return activity
 
 def print_help():
     print(color("stcli", style="bold"))
@@ -201,7 +228,7 @@ def print_help():
     print(color("example:", style="bold"), "stcli graph class/subject 2025-01-01 2025-01-31 week")
     print()
 
-def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today()), values="default", dp=1):
+def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today()), values="default", dp=1, maxdepth=0):
     branch = "├── "
     branch_end = "└── "
     side = "│   "
@@ -241,19 +268,22 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
         children.sort(key=lambda child: get_average_value_by_path(data, f"{path}/{child}" if path else child, dt), reverse=True)
 
     # If there are children, recurse into each one
-    for i, child in enumerate(children):
-        child_path = f"{path}/{child}" if path else child  # Update the path for this child
-        print_tree(
-            tree_data[child],  # Pass the subtree at the child
-            depth+1,
-            child_path,        # Pass the updated path
-            new_prefix,        # Pass the new prefix
-            is_last=(i == len(children) - 1),  # Check if this is the last child
-            sort=sort,
-            dt=dt,
-            values=values,
-            dp=dp
-        )
+    maxdepth = int(maxdepth)
+    if not maxdepth or (maxdepth and depth < maxdepth):
+        for i, child in enumerate(children):
+            child_path = f"{path}/{child}" if path else child  # Update the path for this child
+            print_tree(
+                tree_data[child],  # Pass the subtree at the child
+                depth+1,
+                child_path,        # Pass the updated path
+                new_prefix,        # Pass the new prefix
+                is_last=(i == len(children) - 1),  # Check if this is the last child
+                sort=sort,
+                dt=dt,
+                values=values,
+                dp=dp,
+                maxdepth=maxdepth
+            )
 
 def print_list(data, path):
     if path == "/":
@@ -297,14 +327,13 @@ for arg in sys.argv[2:]:
             print(f"Invalid argument: {arg}")
             print_help()
             exit()
-    else:
-        # Treat non-keyword argument as the path
-        if path == "/":
-            path = arg
 
 # Normalize the path and extract keys
 keys = [a for a in path.split("/") if a]
 path = "/".join(keys)
+
+if not path:
+    path = "/"
 
 # Extract the name from the path
 try:
@@ -372,9 +401,34 @@ if sys.argv[1] in ["add", "rm", "edit", "log"]:
                 exit()
 
             set_value_by_path(data, path + "/_values/" + vdate, value)
+        
+elif sys.argv[1] == "activity":
+    try:
+        datetime.strptime(sys.argv[3], "%Y-%m-%d")
+    except:
+        print("invalid date. date should be in format YYYY-MM-DD.")
+        exit()
+    else:
+        day = sys.argv[3] 
+
+    if path and path != "/":
+        activity = get_activity_by_date(get_value_by_path(data, path)[name], day, path) 
+    else:
+        activity = get_activity_by_date(data["classes"], day, path)
+
+    for log in activity:
+        change = activity[log][1] - activity[log][0]
+        if change:
+            if change > 0: 
+                changecolor = colorsys.hls_to_rgb(change / 100, 0.5, 1)
+                changecolor = "#" + "".join([str(hex(int(i * 255)))[2:].ljust(2, "0") for i in changecolor])
+                change = "+" + color(str(change), fg=changecolor, style="bold")
+            else:
+                change = str(change)
+            print("/".join(log.split("/")[:-1]) + "/" + color(log.split("/")[-1], fg=activity[log][2], style="bold") + " - " + change + f" (to {activity[log][1]})")
 
 elif sys.argv[1] == "tree":
-    if path:
+    if path and path != "/":
         print_tree(get_value_by_path(data, path)[name], path=path, **kwargs)
     else:
         print_tree(data["classes"], path=path, **kwargs)
