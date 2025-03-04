@@ -327,6 +327,11 @@ for arg in sys.argv[2:]:
             print(f"Invalid argument: {arg}")
             print_help()
             exit()
+    elif path == "/":
+        ppath = arg
+        pkeys = arg.split("/")
+        if pkeys[-1] in get_value_by_path(data, ppath):
+            path = ppath
 
 # Normalize the path and extract keys
 keys = [a for a in path.split("/") if a]
@@ -518,6 +523,7 @@ elif sys.argv[1] == "graph":
             ("█" * int(width * graph_data[i] / maximum)).ljust(width, " "),
             f"{graph_data[i]:.1f}%".rjust(6)
         )
+
 elif sys.argv[1] == "refreshcolors":
     data["classes"] = refresh_colors(data["classes"], "")
 
