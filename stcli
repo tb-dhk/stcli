@@ -224,6 +224,9 @@ def print_help():
     print("    - week: first day of the week.")
     print("    - month: last day of the month.")
     print("    - integer: custom number of days.")
+    print("- values: what kind of values to display.")
+    print("    - completion: amount completed at the end of the period.")
+    print("    - progress: progress made in the period.")
     print()
     print(color("example:", style="bold"), "stcli graph class/subject 2025-01-01 2025-01-31 week")
     print()
@@ -473,6 +476,8 @@ elif sys.argv[1] == "graph":
                 value -= get_average_value_by_path(data, path, prev_month_end.strftime("%Y-%m-%d"))
             graph_data[month_key] = value
             current = month_end + timedelta(days=1)
+        if values == "progress":
+            print(graph_data)
 
     elif groupby == "week":
         current = start
@@ -517,10 +522,13 @@ elif sys.argv[1] == "graph":
     else:
         maximum = int(maximum)
 
+    mx = max(graph_data.values())
+
     for i in graph_data:
+        bar_width = graph_data[i] / mx * 100
         print(
             i[:10].ljust(10), 
-            ("█" * int(width * graph_data[i] / maximum)).ljust(width, " "),
+            ("█" * int(width * bar_width / maximum)).ljust(width, " "),
             f"{graph_data[i]:.1f}%".rjust(6)
         )
 
