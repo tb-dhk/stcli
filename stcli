@@ -257,6 +257,8 @@ def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alpha
         else:
             current_value = float(current_value)
         display_name = path.split("/")[-1]  # The last segment of the path
+        if not display_name:
+            display_name = "/"
         print(prefix + ((branch_end if is_last else branch) if depth else "") + color(display_name, color_value, style="bold") + f" - {current_value}%")
 
     # Adjust the prefix for the next level of child nodes
@@ -318,8 +320,6 @@ if len(sys.argv) == 1:
 # Initialize variables
 kwargs = {}
 path = "/"
-
-from pprint import pprint
 
 # Parse command-line arguments
 for arg in sys.argv[2:]:
@@ -438,7 +438,6 @@ elif sys.argv[1] == "activity":
             print("/".join(log.split("/")[:-1]) + "/" + color(log.split("/")[-1], fg=activity[log][2], style="bold") + " - " + change + f" (to {activity[log][1]})")
 
 elif sys.argv[1] == "tree":
-    print([path])
     if path and path != "/":
         print_tree(get_value_by_path(data, path)[name], path=path, **kwargs)
     else:
