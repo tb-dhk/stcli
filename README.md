@@ -101,18 +101,19 @@ stcli tree class dt=2025-01-01 sort=alphabetical values=completion dp=1
 
 ### 6. **display graph**
 ```bash
-stcli graph [path] [start] [end] [group]
+stcli graph [path] [start] [end] [kwargs]
 ```
 - displays progress as a graph for the specified element.  
 - arguments:
   - `start` and `end`: dates in `yyyy-mm-dd` format.
-  - `group`: specify grouping:
+- supported `kwargs`:
+  - `groupby`: specify grouping:
     - `week`: group by weeks (first day of the week is shown).
     - `month`: group by months (progress value is from the last day of the month).
     - integer: group by a custom number of days.
-  - values: what kind of values to display.
-    - completion: amount completed at the end of the period.
-    - progress: progress made in the period.
+  - `values`: what kind of values to display.
+    - `completion`: amount completed at the end of the period.
+    - `progress`: progress made in the period.
 
 
 #### example
