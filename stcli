@@ -202,7 +202,7 @@ def print_help():
     print(color("5. display tree", style="bold"))
     print(color("stcli tree [path] [kwargs]", style="underline"))
     print("displays a tree of the hierarchy, starting from the specified path.")
-    print("supported kwargs:")
+    print("keyword arguments:")
     print("- dt: specify a date (yyyy-mm-dd) to view progress for that date.")
     print("- sort: sort the tree by 'alphabetical' or 'completion'.")
     print("- values: specify numerical values in the output.")
@@ -216,11 +216,12 @@ def print_help():
 
     # display graph
     print(color("6. display graph", style="bold"))
-    print(color("stcli graph [path] [start] [end] [group]", style="underline"))
+    print(color("stcli graph [path] [start] [end]", style="underline"))
     print("displays progress as a graph.")
     print("arguments:")
     print("- start, end: date range (yyyy-mm-dd).")
-    print("- group: grouping mode.")
+    print("keyword arguments:")
+    print("- groupby: grouping mode.")
     print("    - week: first day of the week.")
     print("    - month: last day of the month.")
     print("    - integer: custom number of days.")
@@ -467,6 +468,7 @@ elif sys.argv[1] == "graph":
     # Grouping logic
     if groupby == "month":
         current = start
+        prev = None
         while current <= end:
             month_key = current.strftime("%Y-%m-01")
             month_end = (current.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
@@ -474,8 +476,9 @@ elif sys.argv[1] == "graph":
 
             value = get_average_value_by_path(data, path, month_end.strftime("%Y-%m-%d"))
             if values == "progress":
-                prev_month_end = month_end.replace(day=1) - timedelta(days=1)
-                value -= get_average_value_by_path(data, path, prev_month_end.strftime("%Y-%m-%d"))
+                if prev:
+                    value -= get_average_value_by_path(data, path, prev.strftime("%Y-%m-%d"))
+                prev = current
             graph_data[month_key] = value
             current = month_end + timedelta(days=1)
         if values == "progress":
@@ -483,28 +486,32 @@ elif sys.argv[1] == "graph":
 
     elif groupby == "week":
         current = start
+        prev = None
         while current <= end:
             week_key = current.strftime("%Y-%m-%d")  # Use the first day as the key
             week_end = min(current + timedelta(days=6), end)  # Ensure we don't go past the end date
 
             value = get_average_value_by_path(data, path, week_end.strftime("%Y-%m-%d"))
             if values == "progress":
-                prev_week_end = week_end - timedelta(days=7)
-                value -= get_average_value_by_path(data, path, prev_week_end.strftime("%Y-%m-%d"))
+                if prev: 
+                    value -= get_average_value_by_path(data, path, prev.strftime("%Y-%m-%d"))
+                prev = current
             graph_data[week_key] = value
             current = week_end + timedelta(days=1)
 
     elif groupby.isdigit():
         group_days = int(groupby)
         current = start
+        prev = None
         while current <= end:
             group_key = f"{current.strftime('%Y-%m-%d')} to {(current + timedelta(days=group_days - 1)).strftime('%Y-%m-%d')}"
             group_end = min(current + timedelta(days=group_days - 1), end)
 
             value = get_average_value_by_path(data, path, group_end.strftime("%Y-%m-%d"))
             if values == "progress":
-                prev_group_end = group_end - timedelta(days=group_days)
-                value -= get_average_value_by_path(data, path, prev_group_end.strftime("%Y-%m-%d"))
+                if prev:
+                    value -= get_average_value_by_path(data, path, prev.strftime("%Y-%m-%d"))
+                prev = current
             graph_data[group_key] = value
             current = group_end + timedelta(days=1)
 
