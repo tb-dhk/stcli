@@ -233,7 +233,6 @@ def print_help():
     print()
 
 def print_tree(tree_data, depth=0, path="", prefix="", is_last=True, sort="alphabetical", dt=str(date.today()), values="default", dp=1, maxdepth=0):
-    depth = int(depth)
     branch = "├── "
     branch_end = "└── "
     side = "│   "
